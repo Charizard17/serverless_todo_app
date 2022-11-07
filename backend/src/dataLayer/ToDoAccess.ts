@@ -1,5 +1,5 @@
 import * as AWS from "aws-sdk";
-const AWSXRay = require("aws-xray-sdk");
+const AWSXRay = require("aws-xray-sdk-core");
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
 import { Types } from "aws-sdk/clients/s3";
 import { TodoItem } from "../models/TodoItem";

@@ -1,6 +1,6 @@
 org: charizard17
-app: charizard17-todo-app-v2
-service: charizard17-todo-app-v2
+app: charizard17-todo-app-v8
+service: charizard17-todo-app-v8
 
 plugins:
   - serverless-webpack
@@ -11,18 +11,24 @@ plugins:
 provider:
   name: aws
   runtime: nodejs12.x
-  # lambdaHashingVersion: '20201221'
   stage: ${opt:stage, 'prod'}
   region: ${opt:region, 'us-east-1'}
 
   tracing:
     lambda: true
     apiGateway: true
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "xray:PutTraceSegments"
+          - "xray:PutTelemetryRecords"
+        Resource:
+          - "*"
 
   environment:
-    PROJECT_NAME: charizard17-todo-app-v2
-    TODOS_TABLE: charizard17-todo-app-v2-${self:provider.stage}
-    S3_BUCKET_NAME: charizard17-todo-app-v2-${self:provider.stage}
+    PROJECT_NAME: charizard17-todo-app-v8
+    TODOS_TABLE: charizard17-todo-app-v8-${self:provider.stage}
+    S3_BUCKET_NAME: charizard17-todo-app-v8-${self:provider.stage}
 
 custom:
   documentation:
@@ -63,6 +69,13 @@ custom:
 functions:
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - xray:PutTelemetryRecords
+          - xray:PutTraceSegments
+        Resource:
+          - "*"
 
   GetTodos:
     handler: src/lambda/http/getTodos.handler
@@ -80,6 +93,7 @@ functions:
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:
+          - xray:PutTelemetryRecords
           - xray:PutTraceSegments
         Resource:
           - "*"
@@ -106,6 +120,7 @@ functions:
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:
+          - xray:PutTelemetryRecords
           - xray:PutTraceSegments
         Resource:
           - "*"
@@ -132,6 +147,7 @@ functions:
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:
+          - xray:PutTelemetryRecords
           - xray:PutTraceSegments
         Resource:
           - "*"
@@ -152,6 +168,7 @@ functions:
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:
+          - xray:PutTelemetryRecords
           - xray:PutTraceSegments
         Resource:
           - "*"
@@ -169,52 +186,12 @@ functions:
       - Effect: Allow
         Action:
           - s3:*
+          - xray:PutTelemetryRecords
           - xray:PutTraceSegments
         Resource: arn:aws:s3:::${self:provider.environment.S3_BUCKET_NAME}/*
 
 resources:
   Resources:
-    TodosTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        AttributeDefinitions:
-          - AttributeName: userId
-            AttributeType: S
-          - AttributeName: todoId
-            AttributeType: S
-        KeySchema:
-          - AttributeName: userId
-            KeyType: HASH
-          - AttributeName: todoId
-            KeyType: RANGE
-        BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.TODOS_TABLE}
-    onlyBody:
-      Type: "AWS::ApiGateway::RequestValidator"
-      Properties:
-        Name: "only-body"
-        RestApiId:
-          Ref: ApiGatewayRestApi
-        ValidateRequestBody: true
-        ValidateRequestParameters: false
-    AttachmentsBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:provider.environment.S3_BUCKET_NAME}
-        CorsConfiguration:
-          CorsRules:
-            - AllowedOrigins:
-                - "*"
-              AllowedHeaders:
-                - "*"
-              AllowedMethods:
-                - GET
-                - PUT
-                - POST
-                - DELETE
-                - HEAD
-              MaxAge: 300
-
     RequestBodyValidator:
       Type: AWS::ApiGateway::RequestValidator
       Properties:
@@ -245,6 +222,49 @@ resources:
         ResponseType: DEFAULT_5XX
         RestApiId:
           Ref: ApiGatewayRestApi
+
+    TodosTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: todoId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: todoId
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.TODOS_TABLE}
+
+    onlyBody:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: "only-body"
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
+
+    AttachmentsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.S3_BUCKET_NAME}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedOrigins:
+                - "*"
+              AllowedHeaders:
+                - "*"
+              AllowedMethods:
+                - GET
+                - PUT
+                - POST
+                - DELETE
+                - HEAD
+              MaxAge: 500
 
     BucketPolicy:
       Type: AWS::S3::BucketPolicy
