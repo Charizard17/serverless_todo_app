@@ -2,4 +2,4 @@
 
 ## App demo
 
-<img src="assets/demo.mov" alt="app_demo" width="800"/>
+<img src="assets/demo.gif" alt="app_demo" width="800"/>
