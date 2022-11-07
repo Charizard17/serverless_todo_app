@@ -16,7 +16,7 @@ import {
 
 import { createTodo, deleteTodo, getTodos, patchTodo } from "../api/todos-api";
 import Auth from "../auth/Auth";
-import { Todo } from "../types/Todo";
+import { Todo } from "../interfaces/Todo";
 
 interface TodosProps {
   auth: Auth;
@@ -47,9 +47,12 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
   onTodoCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
     try {
       const dueDate = this.calculateDueDate();
-      const newTodo = await createTodo(this.props.auth.getIdToken(), {
-        name: this.state.newTodoName,
-        dueDate,
+      const newTodo = await createTodo({
+        idToken: this.props.auth.getIdToken(),
+        newTodo: {
+          name: this.state.newTodoName,
+          dueDate,
+        },
       });
       this.setState({
         todos: [...this.state.todos, newTodo],
@@ -62,9 +65,12 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
 
   onTodoDelete = async (todoId: string) => {
     try {
-      await deleteTodo(this.props.auth.getIdToken(), todoId);
+      await deleteTodo({
+        idToken: this.props.auth.getIdToken(),
+        todoId: todoId,
+      });
       this.setState({
-        todos: this.state.todos.filter((todo) => todo.todoId != todoId),
+        todos: this.state.todos.filter((todo) => todo.todoId !== todoId),
       });
     } catch {
       alert("ToDo deletion failed!");
@@ -74,10 +80,14 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
   onTodoCheck = async (pos: number) => {
     try {
       const todo = this.state.todos[pos];
-      await patchTodo(this.props.auth.getIdToken(), todo.todoId, {
-        name: todo.name,
-        dueDate: todo.dueDate,
-        done: !todo.done,
+      await patchTodo({
+        idToken: this.props.auth.getIdToken(),
+        todoId: todo.todoId,
+        updatedTodo: {
+          name: todo.name,
+          dueDate: todo.dueDate,
+          done: !todo.done,
+        },
       });
       this.setState({
         todos: update(this.state.todos, {
