@@ -5,29 +5,50 @@ import {
   APIGatewayProxyResult,
   APIGatewayProxyHandler,
 } from "aws-lambda";
-import { deleteToDo } from "../../businessLogic/ToDo";
+import { getUserId } from "../utils";
 import { createLogger } from "../../utils/logger";
 
-const myLogger = createLogger("todoAccess");
+const myLogger = createLogger("deleteTodo");
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  const authorization = event.headers.Authorization;
-  const split = authorization.split(" ");
-  const jwtToken = split[1];
+  myLogger.info("Processing event: ", { event: event });
 
   const todoId = event.pathParameters.todoId;
+  const userId = getUserId(event);
 
-  const deleteData = await deleteToDo(todoId, jwtToken);
+  try {
+    const deleteData = await deleteTodo(todoId, userId);
+    myLogger.info("Deleted todoId and userId: ", { todoId, userId });
 
-  myLogger.info("deleteTodoHandler", { params: deleteData });
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Credentials": true,
+      },
+      body: JSON.stringify({
+        item: deleteData,
+      }),
+    };
+  } catch (err) {
+    myLogger.error("Unable to delete ToDo. Error JSON:", {
+      error: JSON.stringify(err, null, 2),
+    });
 
-  return {
-    statusCode: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-    },
-    body: deleteData,
-  };
+    return {
+      statusCode: 400,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Credentials": true,
+      },
+      body: "",
+    };
+  }
 };
+function deleteTodo(todoId: string, userId: string) {
+  throw new Error(
+    `Function not implemented. todoId: ${todoId} , userId ${userId}`
+  );
+}
