@@ -1,68 +1,88 @@
 import { apiEndpoint } from "../config";
-import { Todo } from "../interfaces/Todo";
+import { Todo } from "../types/Todo";
+import { CreateTodoRequest } from "../types/CreateTodoRequest";
 import Axios from "axios";
-import {
-  CreateTodoInterface,
-  DeleteTodoInterface,
-  GetTodosInterface,
-  GetUploadUrlInterface,
-  PatchTodoInterface,
-  UploadFileInterface,
-} from "../interfaces/todosApiInterfaces";
+import { UpdateTodoRequest } from "../types/UpdateTodoRequest";
 
-export async function getTodos(props: GetTodosInterface): Promise<Todo[]> {
+export async function getTodos(idToken: string): Promise<Todo[]> {
   console.log("Fetching todos");
 
   const response = await Axios.get(`${apiEndpoint}/todos`, {
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${props.idToken}`,
+      Authorization: `Bearer ${idToken}`,
     },
   });
   console.log("Todos:", response.data);
   return response.data.items;
 }
 
-export async function createTodo(props: CreateTodoInterface): Promise<Todo> {
-  const data = JSON.stringify(props.newTodo);
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${props.idToken}`,
-  };
-  const response = await Axios.post(`${apiEndpoint}/todos`, data, { headers });
+export async function createTodo(
+  idToken: string,
+  newTodo: CreateTodoRequest
+): Promise<Todo> {
+  const response = await Axios.post(
+    `${apiEndpoint}/todos`,
+    JSON.stringify(newTodo),
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+    }
+  );
   return response.data.item;
 }
 
-export async function patchTodo(props: PatchTodoInterface): Promise<void> {
-  const data = JSON.stringify(props.updatedTodo);
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${props.idToken}`,
-  };
-  await Axios.patch(`${apiEndpoint}/todos/${props.todoId}`, data, { headers });
+export async function patchTodo(
+  idToken: string,
+  todoId: string,
+  updatedTodo: UpdateTodoRequest
+): Promise<void> {
+  await Axios.patch(
+    `${apiEndpoint}/todos/${todoId}`,
+    JSON.stringify(updatedTodo),
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+    }
+  );
 }
 
-export async function deleteTodo(props: DeleteTodoInterface): Promise<void> {
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${props.idToken}`,
-  };
-  await Axios.delete(`${apiEndpoint}/todos/${props.todoId}`, { headers });
+export async function deleteTodo(
+  idToken: string,
+  todoId: string
+): Promise<void> {
+  await Axios.delete(`${apiEndpoint}/todos/${todoId}`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${idToken}`,
+    },
+  });
 }
 
 export async function getUploadUrl(
-  props: GetUploadUrlInterface
+  idToken: string,
+  todoId: string
 ): Promise<string> {
   try {
-    const data = "";
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${props.idToken}`,
-    };
+    console.log("getUploadUrl idToken", idToken);
+    console.log("getUploadUrl todoId", todoId);
     const response = await Axios.post(
-      `${apiEndpoint}/todos/${props.todoId}/attachment`,
-      data,
-      { headers }
+      `${apiEndpoint}/todos/${todoId}/attachment`,
+      "",
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+      }
+    );
+    console.log(
+      "getUploadUrl response.data.uploadUrl",
+      response.data.uploadUrl
     );
     return response.data.uploadUrl;
   } catch (err) {
@@ -71,9 +91,12 @@ export async function getUploadUrl(
   return "";
 }
 
-export async function uploadFile(props: UploadFileInterface): Promise<void> {
+export async function uploadFile(
+  uploadUrl: string,
+  file: Buffer
+): Promise<void> {
   try {
-    await Axios.put(props.uploadUrl, props.file);
+    await Axios.put(uploadUrl, file);
   } catch (err) {
     console.error(" Upload file", err);
   }

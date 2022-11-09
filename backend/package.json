@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "dependencies": {
+    "@aws-sdk/lib-dynamodb": "^3.204.0",
     "@aws-sdk/s3-request-presigner": "^3.204.0",
     "@types/axios": "^0.14.0",
     "@types/http-errors": "^1.8.2",

@@ -9,17 +9,15 @@ import { parseUserId } from "../../auth/utils";
 import { createLogger } from "../../utils/logger";
 import { getTodos } from "../../businessLogic/todos";
 
-const myLogger = createLogger("getToDos");
+const myLogger = createLogger("getTodos");
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   myLogger.info("Processing event: ", { event: event });
-
   const authHeader = event.headers.Authorization;
   const authSplit = authHeader.split(" ");
   const userId = parseUserId(authSplit[1]);
-
   try {
     const result = await getTodos(userId);
     myLogger.info("Result: ", { result: result });
