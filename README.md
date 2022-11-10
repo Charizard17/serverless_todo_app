@@ -16,6 +16,10 @@ npm install
 sls deploy -v
 ```
 
+### AWS X-RAY Service map
+
+<img src="assets/aws-xray.png" alt="app_demo" width="800" height="500"/>
+
 ## Client
 
 To run a client application with your desired parameters, edit the client/src/config.ts file to set correct parameters. And then run the following commands:
