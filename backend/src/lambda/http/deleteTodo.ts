@@ -1,12 +1,12 @@
 import "source-map-support/register";
-
 import {
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
   APIGatewayProxyHandler,
 } from "aws-lambda";
-import { getUserId } from "../utils";
 import { createLogger } from "../../utils/logger";
+import { deleteTodo } from "../../businessLogic/todos";
+import { getUserId } from "../utils";
 
 const myLogger = createLogger("deleteTodo");
 
@@ -15,8 +15,11 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   myLogger.info("Processing event: ", { event: event });
 
-  const todoId = event.pathParameters.todoId;
   const userId = getUserId(event);
+  const todoId = event.pathParameters.todoId;
+
+  myLogger.info("deleteTodo todoId: ", todoId);
+  myLogger.info("deleteTodo userId: ", userId);
 
   try {
     const deleteData = await deleteTodo(todoId, userId);
@@ -47,8 +50,3 @@ export const handler: APIGatewayProxyHandler = async (
     };
   }
 };
-function deleteTodo(todoId: string, userId: string) {
-  throw new Error(
-    `Function not implemented. todoId: ${todoId} , userId ${userId}`
-  );
-}

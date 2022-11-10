@@ -6,9 +6,9 @@ import {
   APIGatewayProxyResult,
 } from "aws-lambda";
 import { UpdateTodoRequest } from "../../requests/UpdateTodoRequest";
-import { getUserId } from "../utils";
 import { createLogger } from "../../utils/logger";
 import { updateTodo } from "../../businessLogic/todos";
+import { getUserId } from "../utils";
 
 const myLogger = createLogger("updateTodo");
 
@@ -17,13 +17,14 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   myLogger.info("Processing event: ", { event: event });
 
+  const userId = getUserId(event);
   const todoId = event.pathParameters.todoId;
   const updatedTodo: UpdateTodoRequest = JSON.parse(event.body);
-  const userId = getUserId(event);
+  myLogger.info("updatedTodo UpdateTodoRequest", updatedTodo);
 
   try {
-    const updateTodoBody = await updateTodo(updatedTodo, todoId, userId);
-    myLogger.info("ToDo updated", { updatedItem: updateTodoBody });
+    await updateTodo(updatedTodo, todoId, userId);
+    myLogger.info("updateTodo updatedItem", { updatedItem: updateTodo });
 
     return {
       statusCode: 204,
@@ -31,9 +32,7 @@ export const handler: APIGatewayProxyHandler = async (
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Credentials": true,
       },
-      body: JSON.stringify({
-        uploadUrl: updateTodoBody,
-      }),
+      body: "",
     };
   } catch (e) {
     myLogger.error("error:", { error: e.message });

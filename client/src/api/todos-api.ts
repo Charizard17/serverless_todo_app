@@ -6,7 +6,6 @@ import { UpdateTodoRequest } from "../types/UpdateTodoRequest";
 
 export async function getTodos(idToken: string): Promise<Todo[]> {
   console.log("Fetching todos");
-
   const response = await Axios.get(`${apiEndpoint}/todos`, {
     headers: {
       "Content-Type": "application/json",
@@ -39,6 +38,7 @@ export async function patchTodo(
   todoId: string,
   updatedTodo: UpdateTodoRequest
 ): Promise<void> {
+  console.log("patchTodo", updatedTodo);
   await Axios.patch(
     `${apiEndpoint}/todos/${todoId}`,
     JSON.stringify(updatedTodo),
@@ -67,29 +67,45 @@ export async function getUploadUrl(
   idToken: string,
   todoId: string
 ): Promise<string> {
-  try {
-    console.log("getUploadUrl idToken", idToken);
-    console.log("getUploadUrl todoId", todoId);
-    const response = await Axios.post(
-      `${apiEndpoint}/todos/${todoId}/attachment`,
-      "",
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
-      }
-    );
-    console.log(
-      "getUploadUrl response.data.uploadUrl",
-      response.data.uploadUrl
-    );
-    return response.data.uploadUrl;
-  } catch (err) {
-    console.error("get upload url", err);
-  }
-  return "";
+  const response = await Axios.post(
+    `${apiEndpoint}/todos/${todoId}/attachment`,
+    "",
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+    }
+  );
+  return response.data.uploadUrl;
 }
+
+// export async function getUploadUrl(
+//   idToken: string,
+//   todoId: string
+// ): Promise<string> {
+//   try {
+//     console.log("getUploadUrl idToken", idToken);
+//     console.log("getUploadUrl todoId", todoId);
+//     const response = await Axios.post(
+//       `${apiEndpoint}/todos/${todoId}/attachment`,
+//       {
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${idToken}`,
+//         },
+//       }
+//     );
+//     console.log(
+//       "getUploadUrl response.data.uploadUrl",
+//       response.data.uploadUrl
+//     );
+//     return response.data.uploadUrl;
+//   } catch (err) {
+//     console.error("get upload url", err);
+//   }
+//   return "";
+// }
 
 export async function uploadFile(
   uploadUrl: string,

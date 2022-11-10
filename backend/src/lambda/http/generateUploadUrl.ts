@@ -1,36 +1,30 @@
 import "source-map-support/register";
-
 import {
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
   APIGatewayProxyHandler,
 } from "aws-lambda";
-import { generateUploadUrl } from "../../businessLogic/todos";
+import { attachUrl, getPresignedUrl } from "../../businessLogic/todos";
 import { createLogger } from "../../utils/logger";
+import { getUserId } from "../utils";
 
 const myLogger = createLogger("generateUploadUrl");
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  myLogger.info("Processing event: ", { event: event });
+
   const todoId = event.pathParameters.todoId;
+  const presignedUrl = await getPresignedUrl(todoId);
+  const userId = getUserId(event);
 
   try {
-    const URL = await generateUploadUrl(todoId);
-    myLogger.info("generateUploadUrlHandler", { params: URL });
-
-    return {
-      statusCode: 202,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Credentials": true,
-      },
-      body: JSON.stringify({
-        uploadUrl: URL,
-      }),
-    };
+    await attachUrl(userId, todoId);
+    myLogger.info("generateUploadUrl todoId and userId", todoId, userId);
+    myLogger.info("generateUploadUrl presignedUrl:", presignedUrl);
   } catch (e) {
-    myLogger.info("An error is occured when generating url: ", {
+    myLogger.error("An error is occured on attaching url: ", {
       error: e.message,
     });
 
@@ -43,4 +37,15 @@ export const handler: APIGatewayProxyHandler = async (
       body: "",
     };
   }
+
+  return {
+    statusCode: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Credentials": true,
+    },
+    body: JSON.stringify({
+      uploadUrl: presignedUrl,
+    }),
+  };
 };

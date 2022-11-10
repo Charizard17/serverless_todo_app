@@ -19,10 +19,13 @@ export const handler: APIGatewayProxyHandler = async (
   const newTodo: CreateTodoRequest = JSON.parse(event.body);
   const authorization = event.headers.Authorization;
   const split = authorization.split(" ");
-  const jwtToken = split[1];
+  const userId = split[1];
+
+  myLogger.info("creteToDo newTodo", newTodo);
+  myLogger.info("creteToDo userId", userId);
 
   try {
-    const newItem = await createTodo(newTodo, jwtToken);
+    const newItem = await createTodo(newTodo, userId);
     myLogger.info("New ToDo item created: ", { item: newItem });
 
     return {

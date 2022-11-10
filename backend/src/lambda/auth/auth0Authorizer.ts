@@ -14,10 +14,10 @@ export const handler = async (
 ): Promise<CustomAuthorizerResult> => {
   myLogger.info("Authorizing a user..", event.authorizationToken);
   try {
-    const jwtToken = await verifyToken(event.authorizationToken);
-    myLogger.info("User authorized!", jwtToken);
+    const userId = await verifyToken(event.authorizationToken);
+    myLogger.info("User authorized!", userId);
     return {
-      principalId: jwtToken.sub,
+      principalId: userId.sub,
       policyDocument: {
         Version: "2012-10-17",
         Statement: [

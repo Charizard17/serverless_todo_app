@@ -1,5 +1,4 @@
 import "source-map-support/register";
-
 import {
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
@@ -18,6 +17,9 @@ export const handler: APIGatewayProxyHandler = async (
   const authHeader = event.headers.Authorization;
   const authSplit = authHeader.split(" ");
   const userId = parseUserId(authSplit[1]);
+
+  myLogger.info("getTodos userId", userId);
+
   try {
     const result = await getTodos(userId);
     myLogger.info("Result: ", { result: result });

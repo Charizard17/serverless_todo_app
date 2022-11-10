@@ -10,7 +10,7 @@ export interface CreateTodoInterface {
   newTodo: CreateTodoRequest;
 }
 
-export interface PatchTodoInterface {
+export interface UpdateTodoInterface {
   idToken: string;
   todoId: string;
   updatedTodo: UpdateTodoRequest;

@@ -1,7 +1,7 @@
 import { decode } from "jsonwebtoken";
 import { JwtPayload } from "./JwtPayload";
 
-export function parseUserId(jwtToken: string): string {
-  const decodedJwt = decode(jwtToken) as JwtPayload;
-  return decodedJwt.sub;
+export function parseUserId(userId: string): string {
+  const decodedUserId = decode(userId) as JwtPayload;
+  return decodedUserId.sub;
 }
