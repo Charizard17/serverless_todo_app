@@ -5,22 +5,19 @@ import { createLogger } from "../../utils/logger";
 import Axios from "axios";
 import { JwtPayload } from "../../auth/JwtPayload";
 
-const logger = createLogger("auth");
+const myLogger = createLogger("auth0Authorizer");
 const jwksUrl =
   "https://dev-4ikc5lybrkey36cg.us.auth0.com/.well-known/jwks.json";
 
 export const handler = async (
   event: CustomAuthorizerEvent
 ): Promise<CustomAuthorizerResult> => {
-  logger.info("Authorizing a user.. ", event.authorizationToken);
-
+  myLogger.info("Authorizing a user..", event.authorizationToken);
   try {
-    const jwtToken = await verifyToken(event.authorizationToken);
-
-    logger.info("User is authorized! ", jwtToken);
-
+    const userId = await verifyToken(event.authorizationToken);
+    myLogger.info("User authorized!", userId);
     return {
-      principalId: jwtToken.sub,
+      principalId: userId.sub,
       policyDocument: {
         Version: "2012-10-17",
         Statement: [
@@ -33,8 +30,7 @@ export const handler = async (
       },
     };
   } catch (e) {
-    logger.error("User not authorized! ", { error: e.message });
-
+    myLogger.error("User not authorized!", { error: e.message });
     return {
       principalId: "user",
       policyDocument: {
@@ -52,16 +48,22 @@ export const handler = async (
 };
 
 async function verifyToken(authHeader: string): Promise<JwtPayload> {
-  try {
-    const token = getToken(authHeader);
-    const res = await Axios.get(jwksUrl);
-    const pemData = res["data"]["keys"][0]["x5c"][0];
-    const cert = `-----BEGIN CERTIFICATE-----\n${pemData}\n-----END CERTIFICATE-----`;
-
-    return verify(token, cert, { algorithms: ["RS256"] }) as JwtPayload;
-  } catch (err) {
-    logger.error("Failed to authenticate! ", err);
+  if (!authHeader) {
+    throw new Error("No authentication header");
   }
+
+  if (!authHeader.toLocaleLowerCase().startsWith("bearer ")) {
+    throw new Error("Invalid authentication header");
+  }
+
+  const token = getToken(authHeader);
+  const certificate = await getCertificate(jwksUrl);
+
+  if (!certificate) {
+    throw new Error("Invalid certificate");
+  }
+
+  return verify(token, certificate, { algorithms: ["RS256"] }) as JwtPayload;
 }
 
 function getToken(authHeader: string): string {
@@ -74,4 +76,15 @@ function getToken(authHeader: string): string {
   const token = split[1];
 
   return token;
+}
+
+async function getCertificate(jwksUrl: string) {
+  try {
+    const response = await Axios.get(jwksUrl);
+    const key = response["data"]["keys"][0]["x5c"][0];
+    const cert = `-----BEGIN CERTIFICATE-----\n${key}\n-----END CERTIFICATE-----`;
+    return cert;
+  } catch (error) {
+    myLogger.error("Getting certificate failed", error);
+  }
 }

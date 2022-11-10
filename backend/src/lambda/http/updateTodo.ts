@@ -1,36 +1,49 @@
 import "source-map-support/register";
+
 import {
   APIGatewayProxyEvent,
   APIGatewayProxyHandler,
   APIGatewayProxyResult,
 } from "aws-lambda";
 import { UpdateTodoRequest } from "../../requests/UpdateTodoRequest";
-import { updateToDo } from "../../businessLogic/ToDo";
 import { createLogger } from "../../utils/logger";
+import { updateTodo } from "../../businessLogic/todos";
+import { getUserId } from "../utils";
 
-const myLogger = createLogger("todoAccess");
+const myLogger = createLogger("updateTodo");
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  const authorization = event.headers.Authorization;
-  const split = authorization.split(" ");
-  const jwtToken = split[1];
+  myLogger.info("Processing event: ", { event: event });
 
+  const userId = getUserId(event);
   const todoId = event.pathParameters.todoId;
   const updatedTodo: UpdateTodoRequest = JSON.parse(event.body);
+  myLogger.info("updatedTodo UpdateTodoRequest", updatedTodo);
 
-  const toDoItem = await updateToDo(updatedTodo, todoId, jwtToken);
+  try {
+    await updateTodo(updatedTodo, todoId, userId);
+    myLogger.info("updateTodo updatedItem", { updatedItem: updateTodo });
 
-  myLogger.info("updateTodoHandler", { params: toDoItem });
+    return {
+      statusCode: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Credentials": true,
+      },
+      body: "",
+    };
+  } catch (e) {
+    myLogger.error("error:", { error: e.message });
 
-  return {
-    statusCode: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-    },
-    body: JSON.stringify({
-      item: toDoItem,
-    }),
-  };
+    return {
+      statusCode: 404,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Credentials": true,
+      },
+      body: `error ${e}`,
+    };
+  }
 };

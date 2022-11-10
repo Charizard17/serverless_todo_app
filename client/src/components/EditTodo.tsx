@@ -46,7 +46,7 @@ export class EditTodo extends React.PureComponent<
 
     try {
       if (!this.state.file) {
-        alert("File should be selected!");
+        alert("File should be selected");
         return;
       }
 
@@ -59,7 +59,7 @@ export class EditTodo extends React.PureComponent<
       this.setUploadState(UploadState.UploadingFile);
       await uploadFile(uploadUrl, this.state.file);
 
-      alert("File is uploaded!");
+      alert("File was uploaded!");
     } catch (e) {
       alert("Could not upload a file: " + e.message);
     } finally {
@@ -74,6 +74,7 @@ export class EditTodo extends React.PureComponent<
   }
 
   render() {
+    console.log("EditTodo test", UploadState[UploadState.NoUpload]);
     return (
       <div>
         <h1>Upload an image</h1>
